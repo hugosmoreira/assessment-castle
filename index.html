@@ -1,0 +1,183 @@
+<html>
+<head>
+  <!-- Polyfills only needed for Firefox and Edge. -->
+  <script src="https://unpkg.com/@webcomponents/webcomponentsjs@latest/webcomponents-loader.js"></script>
+  <!-- Moment.js -->
+  <script src="https://unpkg.com/moment"></script>
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Works only on browsers that support Javascript modules like
+       Chrome, Safari, Firefox 60, Edge 17 -->
+  <script type="module">
+    import {LitElement, html, css} from 'https://unpkg.com/lit-element/lit-element.js?module';
+    
+    class MyElement extends LitElement {
+
+      static get properties() {
+        return {
+          events: {type: Array },
+          eventsLength: {type: Number },
+          lastUpdated: {type: String }
+        }
+      }
+      
+      constructor() {
+        super();
+        this._refreshData();
+        this.interval = window.setInterval(() => {
+          this._refreshData();
+        }, 60000);
+      }
+      
+      static get styles() {
+        return css`
+          .my-element {
+            font-family: 'Noto Sans KR', sans-serif;
+          }
+          
+          .container {
+            text-align: center;
+          }
+          
+          .title {
+            font-size: 1.5em;
+            font-weight: bold;
+          }
+          
+          .subtitle {
+            font-size: 1em;
+            font-weight: lighter;
+            font-style: italic;
+            margin-right: 1em;
+          }
+          
+          .refresh {
+            font-size: 1em;
+            font-weight: bold;
+          }
+          
+          table {
+            width: 98vw;
+            margin-left: auto;
+            margin-right: auto;
+            border-spacing: 0px;
+            border-collapse: separate;
+          }
+          
+          th {
+            background-color: #C0C0C0;
+            padding: 10px;
+            font-size: 1.25em;
+            font-weight: bold;
+          }
+          
+          .thLeft {
+            text-align: left;
+          }
+          
+          .trGray {
+            background-color: #D3D3D3;
+          }
+          
+          td {
+            height: 40px;
+          }
+          
+          .color {
+            width: 10px;
+          }
+          
+          .key {
+            font-size: 1em;
+            font-weight: bold;
+          }
+          
+          .description {
+            font-size: 1em;
+          }
+          
+          .priority {
+            font-size: 1em;
+            font-weight: bold;
+            text-align: center;
+          }
+        `;
+      }
+
+      render() {
+        return html`
+          <div class="my-element">
+            <div class="container">
+              <div class="title">High Priority Events: Minnesota & Iowa (${this.eventsLength})</div>
+              <div>
+                <span class="subtitle">Last Updated: ${this.lastUpdated}</span>
+                <span class="refresh"><a href="#" @click="${this._refreshClick}">refresh data</a></span>
+              </div>
+            </div>
+            <br/>
+            <table cellspacing="0" cellpadding="0">
+              <tr>
+                <th></th>
+                <th class="thLeft">ID</th>
+                <th class="thLeft">Description</th>
+                <th>Priority</th>
+              </tr>
+              ${this.events.map((event, index) => html`<tr class="${index%2==0?'':'trGray'}"><td class="color" style="background-color: ${event.representation.color}"></td><td class="key">${event.key}</td><td class="description">${event.tooltip}</td><td class="priority">${event.priority}</td></tr>`)}
+            </table>
+          </div>
+        `;
+      }
+      
+      _refreshData() {
+        const urlIowaEvents = 'https://iatg.carsprogram.org/events_v1/api/eventMapFeatures?eventClassifications=iowaAppRoadwork&minPriority=5&maxPriority=7';
+        const urlMinnesotaEvents = 'https://mntg.carsprogram.org/events_v1/api/eventMapFeatures?eventClassifications=roadReports&minPriority=5&maxPriority=7';
+        fetch(urlIowaEvents)
+          .then(response => {
+              
+            if (response.status !== 200) {
+              throw new Error(response.status);
+            }
+            return response.json();
+            
+          })
+          .then(iowaEvents => {
+            console.log(iowaEvents);
+            this.events = iowaEvents;
+            return fetch(urlMinnesotaEvents);
+          })
+          .then(response => {
+            if (response.status !== 200) {
+              throw new Error(response.status);
+            }
+            return response.json();
+            
+          })
+          .then(minnesotaEvents => {
+                            
+            this.events = [...this.events, ...minnesotaEvents];
+            this.eventsLength = this.events.length;
+            this.lastUpdated = moment().format('LTS');
+          })
+      }
+      
+      _refreshClick() {
+        window.clearInterval(this.interval);
+        this._refreshData();
+        this.interval = window.setInterval(() => {
+          this._refreshData();
+        }, 60000);
+      }
+      
+    }
+
+    customElements.define('my-element', MyElement);
+  </script>
+  
+  <my-element></my-element>
+  
+</body>
+</html>
