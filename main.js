@@ -1,10 +1,7 @@
 fetch("https://imdb8.p.rapidapi.com/auto-complete?q=game", {
 	"method": "GET",
 	"headers": {
-		"x-rapidapi-host": "imdb8.p.rapidapi.com",
-		"x-rapidapi-key": "5a8953d4b5mshd42cc0f9d815e2cp124178jsn902de3b3bd29"
-	}
-})
+		
 .then(response => response.json())
 .then(data => {
     const list = data.d
