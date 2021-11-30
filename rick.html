@@ -1,0 +1,143 @@
+<html>
+<head>
+  <!-- Polyfills only needed for Firefox and Edge. -->
+  <script src="https://unpkg.com/@webcomponents/webcomponentsjs@latest/webcomponents-loader.js"></script>
+  <!-- Moment.js -->
+  <script src="https://unpkg.com/moment"></script>
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+  
+</head>
+<body>
+  <!-- Works only on browsers that support Javascript modules like
+       Chrome, Safari, Firefox 60, Edge 17 -->
+  <script type="module">
+    import {LitElement, html, css} from 'https://unpkg.com/lit-element/lit-element.js?module';
+    
+    class MyElement extends LitElement {
+
+      static get properties() {
+        return {
+          events: {type: Array },
+          eventsLength: {type: Number },
+          lastUpdated: {type: String },
+          image: {type: String },
+          name: {type: String },
+          species: {type: String },
+          parames: {type: String },
+          status: {type: String },
+          location: {type: String },
+        }
+      }
+      
+      constructor() {
+        super();
+        this._refreshData();
+        this.interval = window.setInterval(() => {
+          this._refreshData();
+        }, 60000);
+      }
+      
+      static get styles() {
+        return css`
+          .my-element {
+            font-family: 'Noto Sans KR', sans-serif;
+          }
+          
+          .container {
+            text-align: center;
+          }
+          
+          .title {
+            font-size: 1.5em;
+            font-weight: bold;
+          }
+          
+          .subtitle {
+            font-size: 1em;
+            font-weight: lighter;
+            font-style: italic;
+            margin-right: 1em;
+          }
+          
+          .refresh {
+            font-size: 1em;
+            font-weight: bold;
+          }
+
+          .card {
+              box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+              transition: 0.3s;
+              border-radius: 5px;
+              max-width: 300px;
+              display: inline-block;
+          }
+          
+          
+                           
+                 
+          
+        `;
+      }
+
+      render() {
+        return html`
+        
+          <div class="my-element">
+              <div class="container">
+              <h2 class="title">${this.eventsLength}</h2>
+              <h3 class="subtitle">Events</h3>
+              <h3 class="refresh">Last updated: ${this.lastUpdated}</h3>
+              <div><span class="refresh"><a href="#" @click="${this._refreshClick}">refresh data ↺ <i class="fas redo-alt"></i></a></span></div>
+              </br>
+              <div class="card">${this.events.map(e => {
+                return html`
+                <div class="card">
+                    <img src=${e.image} alt="Avatar" style="width:100%">
+                    <div class="container">
+                        <h4><b>Name: ${e.name}</b></h4>
+                        <p>Specie: ${e.species}</p>
+                        <p>Location: ${e.location.name} </p>
+                    </div>
+                </div>
+                `;
+              })}</div>
+              
+          </div>
+        `;
+      }
+      
+      _refreshData() {
+        const url = `https://rickandmortyapi.com/api/character/`
+        
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            this.events = data.results;
+            this.eventsLength = data.info.count;
+            this.image = data.results.image;
+            this.lastUpdated = moment(data.info.lastUpdated).format('MMMM Do YYYY, h:mm:ss a');
+            console.log(data.results);
+          });
+
+      }
+
+      _refreshClick() {
+        window.clearInterval(this.interval);
+        this._refreshData();
+        this.interval = window.setInterval(() => {
+          this._refreshData();
+        }, 60000);
+      }
+      
+    }
+
+    customElements.define('my-element', MyElement);
+  </script>
+  
+  <my-element></my-element>
+  
+</body>
+</html>
